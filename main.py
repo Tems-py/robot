@@ -22,7 +22,22 @@ walls = [
     (600, 900, 1000, 700, (200, 20, 0)),
 ]
 
+class Display:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.states = [[0 for _ in range(width)] for _ in range(height)]
 
+    def draw(self):
+        surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        for i, x in enumerate(self.states):
+            for j, y in enumerate(x):
+                color = (60, 60, 60, 80)
+                if y == 1:
+                    color = (50, 100, 250, 80)
+                pygame.draw.circle(surface, color, (WIDTH - i * 20 - 20, HEIGHT - j * 20 - 20), 8, 0)
+
+        screen.blit(surface, (0, 0))
 
 class Object:
     def __init__(self, x, y, width, height, color):
@@ -89,6 +104,7 @@ class Robot:
 
 
 robot = Robot()
+display = Display(8, 16)
 
 for w in walls:
     obj = Object(*w)
@@ -126,6 +142,8 @@ while running:
     robot.update()
     for r in objects:
         r.draw()
+
+    display.draw()
 
     # flip() the display to put your work on screen
     pygame.display.flip()
