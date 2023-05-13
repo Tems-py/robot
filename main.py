@@ -22,10 +22,13 @@ walls = [
     (600, 900, 1000, 700, (200, 20, 0)),
 ]
 
+
 class Display:
     def __init__(self, width, height):
         self.width = width
         self.height = height
+        self.x = 0
+        self.y = 0
         self.states = [[0 for _ in range(width)] for _ in range(height)]
 
     def draw(self):
@@ -38,6 +41,7 @@ class Display:
                 pygame.draw.circle(surface, color, (WIDTH - i * 20 - 20, HEIGHT - j * 20 - 20), 8, 0)
 
         screen.blit(surface, (0, 0))
+
 
 class Object:
     def __init__(self, x, y, width, height, color):
@@ -138,6 +142,12 @@ while running:
 
     textsurface = font.render(f'D: {robot.hypersonic()}', False, (200, 200, 200))
     screen.blit(textsurface, (20, HEIGHT - 95))
+
+    textsurface = font.render(f'M_X: {display.x}', False, (200, 200, 200))
+    screen.blit(textsurface, (WIDTH - display.height * 20, HEIGHT - display.width * 20 - 40))
+
+    textsurface = font.render(f'M_Y: {display.y}', False, (200, 200, 200))
+    screen.blit(textsurface, (WIDTH - display.height * 15, HEIGHT - display.width * 20 - 40))
 
     robot.update()
     for r in objects:
