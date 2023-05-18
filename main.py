@@ -16,10 +16,9 @@ objects = []
 
 walls = [
     # (x, y, width, height, (r, g, b)),
-    (100, 0, 100, 500, (200, 20, 0)),
-    (100, 650, 100, 70, (200, 20, 0)),
-    (500, 100, 290, 100, (200, 20, 0)),
-    (600, 900, 1000, 700, (200, 20, 0)),
+    (200, 0, 199, 500, (200, 20, 0)),
+    (200, 650, 199, 70, (200, 20, 0)),
+    (700, 400, 199, 100, (200, 20, 0)),
 ]
 
 
@@ -41,6 +40,12 @@ class Display:
                 pygame.draw.circle(surface, color, (WIDTH - i * 20 - 20, HEIGHT - j * 20 - 20), 8, 0)
 
         screen.blit(surface, (0, 0))
+
+    def set_on(self, x, y):
+        print(x, y)
+        x = self.height - x
+        y = self.width - y
+        self.states[x][y] = 1
 
 
 class Object:
@@ -67,7 +72,7 @@ class Robot:
         self.y = 50
         self.imaginary_x = 50
         self.imaginary_y = 50
-        self.rotation = math.pi
+        self.rotation = 1 / 2 * math.pi
 
     def draw(self):
         # screen.blit(pygame.transform.scale(self.image, (50, 50)), (self.x, self.y))
@@ -84,7 +89,8 @@ class Robot:
             x += math.cos(self.rotation)
             y += math.sin(self.rotation)
             for r in objects:
-                if x > WIDTH or y > HEIGHT or x < 0 or y < 0 or not r.check_collisions(x, y):
+                # x > WIDTH or y > HEIGHT or x < 0 or y < 0 or
+                if not r.check_collisions(x, y):
                     ll = False
                     break
             if not ll:
@@ -92,12 +98,12 @@ class Robot:
             distance = math.sqrt((self.x - x) * (self.x - x) + (self.y - y) * (self.y - y))
             if distance > 200:
                 pygame.draw.line(screen, (20, 20, 250), (self.x, self.y), (x, y), 2)
-                return -1
+                return -1, -1, -1
         x, y = round(x), round(y)
         pygame.draw.line(screen, (20, 20, 250), (self.x, self.y), (x, y), 2)
         distance = math.sqrt((self.x - x) * (self.x - x) + (self.y - y) * (self.y - y))
         pygame.draw.circle(screen, (50, 250, 50), (x, y), 5, 0)
-        return distance
+        return distance, x, y
 
     def rotate(self, value):
         self.rotation += math.pi * value * 2
@@ -114,19 +120,18 @@ for w in walls:
     obj = Object(*w)
     objects.append(obj)
 
+scanned_points = []
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
     if pygame.key.get_pressed()[pygame.K_LEFT]:
-        robot.rotate(-0.04)
+        robot.rotate(-0.01)
     if pygame.key.get_pressed()[pygame.K_RIGHT]:
-        robot.rotate(0.04)
+        robot.rotate(0.01)
     if pygame.key.get_pressed()[pygame.K_UP]:
         robot.move(5)
-
-    if pygame.key.get_pressed()[pygame.K_k]:
-        print(robot.hypersonic())
 
     screen.fill((230, 230, 230))
 
@@ -140,7 +145,8 @@ while running:
     textsurface = font.render(f'R: {robot.rotation}', False, (200, 200, 200))
     screen.blit(textsurface, (20, HEIGHT - 75))
 
-    textsurface = font.render(f'D: {robot.hypersonic()}', False, (200, 200, 200))
+    distance = robot.hypersonic()
+    textsurface = font.render(f'D: {distance}', False, (200, 200, 200))
     screen.blit(textsurface, (20, HEIGHT - 95))
 
     textsurface = font.render(f'M_X: {display.x}', False, (200, 200, 200))
@@ -153,7 +159,20 @@ while running:
     for r in objects:
         r.draw()
 
+    if distance[0] != -1:
+        if (distance[1], distance[2]) not in scanned_points:
+            scanned_points.append((round(distance[1] / (WIDTH / 16)), round(distance[2] / (HEIGHT / 8))))
+
+    for p in scanned_points:
+        display.set_on(p[0] + 1, p[1] + 1)
+
     display.draw()
+
+    for i in range(16):
+        pygame.draw.line(screen, (0, 0, 0), (i * (WIDTH / 16), 0), (i * (WIDTH / 16), HEIGHT))
+
+    for i in range(8):
+        pygame.draw.line(screen, (0, 0, 0), (0, i * HEIGHT / 8), (WIDTH, i * HEIGHT / 8))
 
     # flip() the display to put your work on screen
     pygame.display.flip()
